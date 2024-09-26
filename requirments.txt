@@ -1,0 +1,7 @@
+pip install beautifulsoup4 Scrapy requests selenium lxml
+
+python.exe -m pip install --upgrade pip
+
+before scrapping check 
+url/robots.txt 
+to information on allowed data to srap
