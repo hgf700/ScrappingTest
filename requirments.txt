@@ -1,4 +1,4 @@
-pip install beautifulsoup4 Scrapy requests selenium lxml
+pip install beautifulsoup4 Scrapy requests selenium lxml prettytable
 
 python.exe -m pip install --upgrade pip
 
