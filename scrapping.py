@@ -2,54 +2,38 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-# URL strony, z której pobierasz iframe
-url = 'https://www.scrapethissite.com/pages/frames/'
+url = 'https://www.scrapethissite.com/pages/advanced/'
 
-# Pobranie głównej strony
-response = requests.get(url)
-if response.status_code == 200:
-    # Parsowanie zawartości strony
-    soup = BeautifulSoup(response.content, 'html.parser')
+# Spoofing nagłówki, aby wyglądać jak przeglądarka
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "utf-8",
+    "Connection": "keep-alive",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+}
 
-    # Znalezienie pierwszego iframe
-    iframe = soup.find('iframe')
+response = requests.get(url, headers=headers)
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Znajdź link po tekście "Spoofing Headers"
+link_tag = soup.find('a', string='Spoofing Headers')
+
+if link_tag:
+    link_tag_url = link_tag.get('href')  # Pobierz URL z atrybutu href
+    joinlink_tag_url = urljoin(url, link_tag_url)
+
+    # Pobierz nową stronę, na którą prowadzi link "Spoofing Headers"
+    spoofing_response = requests.get(joinlink_tag_url, headers=headers)
+
+    spoof_soup = BeautifulSoup(spoofing_response.text, 'html.parser')
     
-    if iframe:
-        # Pobranie URL pierwszego iframe
-        iframe_url = iframe['src']
-        full_iframe_url = urljoin(url, iframe_url)
-        
-        # Pobranie zawartości pierwszego iframe
-        iframe_response = requests.get(full_iframe_url)
-        if iframe_response.status_code == 200:
-            iframe_soup = BeautifulSoup(iframe_response.content, 'html.parser')
-            
-            # Znalezienie sekcji z kartą żółwia (np. Cheloniidae)
-            turtle_cards = iframe_soup.find_all('div', class_='turtle-family-card')
-            
-            for card in turtle_cards:
-                # Wyświetlenie nazwy rodziny żółwia
-                family_name = card.find('h3', class_='family-name').text
-                print(f"Rodzina żółwia: {family_name}")
-                
-                # Pobranie URL przycisku "Learn more"
-                learn_more_link = card.find('a', class_='btn btn-default btn-xs')
-                learn_more_url = learn_more_link['href']
-                full_learn_more_url = urljoin(full_iframe_url, learn_more_url)
-                
-                # Pobranie zawartości strony z informacjami o żółwiu
-                learn_more_response = requests.get(full_learn_more_url)
-                if learn_more_response.status_code == 200:
-                    learn_more_soup = BeautifulSoup(learn_more_response.content, 'html.parser')
-                    
-                    # Znalezienie opisu żółwia
-                    turtle_info = learn_more_soup.find('p', class_='lead').text
-                    print(f"Opis: {turtle_info}")
-                else:
-                    print(f"Błąd podczas pobierania szczegółów żółwia: {learn_more_response.status_code}")
-        else:
-            print(f"Błąd podczas pobierania iframe: {iframe_response.status_code}")
+    # Znajdź tekst z odpowiedniego diva
+    spoof = spoof_soup.find('div', class_='col-md-4 col-md-offset-4')
+    
+    if spoof:
+        print(spoof.text.strip())  # Wyświetl tekst bez zbędnych białych znaków
     else:
-        print("Nie znaleziono iframe.")
+        print("Nie znaleziono odpowiedniego div'a na stronie.")
 else:
-    print(f"Błąd podczas pobierania strony: {response.status_code}")
+    print("Nie znaleziono linku 'Spoofing Headers'.")
