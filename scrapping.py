@@ -1,39 +1,35 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 
-url = 'https://www.scrapethissite.com/pages/advanced/'
+# Create a session to persist cookies and login data
+session = requests.Session()
 
-# Spoofing nagłówki, aby wyglądać jak przeglądarka
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "utf-8",
-    "Connection": "keep-alive",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+# URL of the login page
+login_url = 'https://www.scrapethissite.com/login/'
+
+# Get the login page to retrieve CSRF token or other hidden fields
+login_page = session.get(login_url)
+soup = BeautifulSoup(login_page.text, 'html.parser')
+
+login_data = {
+    'username': 'username',
+    'password': 'password'
 }
 
-response = requests.get(url, headers=headers)
-soup = BeautifulSoup(response.text, 'html.parser')
+# Proceed with the login
+login_response = session.post(login_url, data=login_data)
 
-# Znajdź link po tekście "Spoofing Headers"
-link_tag = soup.find('a', string='Spoofing Headers')
+# thats all i can do for free i guess
+if login_response.ok:
+    print("Logged in successfully!")
 
-if link_tag:
-    link_tag_url = link_tag.get('href')  # Pobierz URL z atrybutu href
-    joinlink_tag_url = urljoin(url, link_tag_url)
+    # # Now access the protected page
+    # protected_url = 'https://www.scrapethissite.com/pages/advanced/?gotcha=login'
+    # protected_page = session.get(protected_url)
 
-    # Pobierz nową stronę, na którą prowadzi link "Spoofing Headers"
-    spoofing_response = requests.get(joinlink_tag_url, headers=headers)
+    # # Parse and extract data from the protected page
+    # protected_soup = BeautifulSoup(protected_page.text, 'html.parser')
+    # print(protected_soup.prettify())
 
-    spoof_soup = BeautifulSoup(spoofing_response.text, 'html.parser')
-    
-    # Znajdź tekst z odpowiedniego diva
-    spoof = spoof_soup.find('div', class_='col-md-4 col-md-offset-4')
-    
-    if spoof:
-        print(spoof.text.strip())  # Wyświetl tekst bez zbędnych białych znaków
-    else:
-        print("Nie znaleziono odpowiedniego div'a na stronie.")
 else:
-    print("Nie znaleziono linku 'Spoofing Headers'.")
+    print("Login failed")
