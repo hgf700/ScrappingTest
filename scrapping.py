@@ -11,10 +11,18 @@ login_url = 'https://www.scrapethissite.com/login/'
 login_page = session.get(login_url)
 soup = BeautifulSoup(login_page.text, 'html.parser')
 
+# Find the CSRF token in the login form (if it exists)
+csrf_token = soup.find('input', {'name': 'csrf_token'})['value'] if soup.find('input', {'name': 'csrf_token'}) else None
+
+# Prepare login data, including the CSRF token if found
 login_data = {
     'username': 'username',
     'password': 'password'
 }
+
+# Include the CSRF token if it exists
+if csrf_token:
+    login_data['csrf_token'] = csrf_token
 
 # Proceed with the login
 login_response = session.post(login_url, data=login_data)
@@ -24,12 +32,11 @@ if login_response.ok:
     print("Logged in successfully!")
 
     # # Now access the protected page
-    # protected_url = 'https://www.scrapethissite.com/pages/advanced/?gotcha=login'
+    # protected_url = 'https://www.scrapethissite.com/pages/advanced/?gotcha=csrf'
     # protected_page = session.get(protected_url)
 
     # # Parse and extract data from the protected page
     # protected_soup = BeautifulSoup(protected_page.text, 'html.parser')
     # print(protected_soup.prettify())
-
 else:
     print("Login failed")
